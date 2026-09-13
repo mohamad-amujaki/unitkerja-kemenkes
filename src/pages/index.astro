@@ -22,16 +22,21 @@ const updatedDate = new Date(metadata.generatedAt).toLocaleDateString("id-ID", {
     />
   </head>
   <body>
+    <div class="sticky top-0 z-30 border-b border-amber-200 bg-amber-50/95 backdrop-blur">
+      <p class="mx-auto max-w-7xl px-4 py-2 text-xs text-amber-900 sm:px-6 lg:px-8">
+        Disclaimer: Web app ini bukan produk resmi pemerintah dan tidak terafiliasi dengan Kementerian Kesehatan RI.
+      </p>
+    </div>
     <main class="mx-auto max-w-7xl px-4 pb-10 pt-6 sm:px-6 lg:px-8">
       <header class="mb-7 rounded-2xl border border-(--line) bg-(--surface) p-5 shadow-[0_12px_30px_-24px_rgba(14,79,63,0.8)] sm:p-7" data-animate>
         <p class="mb-2 inline-flex rounded-full border border-(--line) bg-(--surface-soft) px-3 py-1 text-xs font-semibold tracking-wide text-(--brand-1)">
-          Kementerian Kesehatan RI
+          Proyek Independen
         </p>
         <h1 class="text-2xl font-semibold tracking-tight text-(--ink) sm:text-4xl">
           Peta Persebaran Unit Kerja Kemenkes
         </h1>
-        <p class="mt-3 max-w-3xl text-sm leading-relaxed text-(--ink-muted) sm:text-base">
-          Portal publik untuk menelusuri persebaran unit kerja resmi Kemenkes. Data pada halaman ini dapat difilter, diverifikasi sumbernya, dan diekspor sesuai tampilan aktif.
+        <p class="mt-3 max-w-6xl text-sm leading-relaxed text-(--ink-muted) sm:text-base">
+          Proyek pribadi untuk memvisualisasi persebaran unit kerja Kemenkes secara publik. Aplikasi ini dikembangkan dengan bantuan AI (vibe coding), tidak mewakili instansi resmi, dan tidak digunakan sebagai rujukan administratif.
         </p>
         <div class="mt-4 grid gap-3 text-sm text-(--ink-muted) sm:grid-cols-3">
           <p><span class="font-semibold text-(--ink)">Sumber:</span> `docs/data_upt_kemenkes.xlsx`</p>
@@ -39,6 +44,23 @@ const updatedDate = new Date(metadata.generatedAt).toLocaleDateString("id-ID", {
           <p><span class="font-semibold text-(--ink)">Perbaikan data:</span> WhatsApp</p>
         </div>
       </header>
+
+      <section class="mb-6" data-animate>
+        <article id="metodologi" class="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+          <h2 class="text-sm font-semibold text-amber-900">Baca Sebelum Menggunakan Data</h2>
+          <p class="mt-2 text-sm leading-relaxed text-amber-900/90">
+            Data ditampilkan untuk kebutuhan visualisasi publik dan pembelajaran. Bisa ada keterlambatan pembaruan atau kekurangan verifikasi sumber.
+          </p>
+          <ul class="mt-3 list-disc space-y-1 pl-5 text-xs text-amber-900/90">
+            <li>Bukan kanal resmi pemerintah</li>
+            <li>Bukan dokumen keputusan administratif</li>
+            <li>Koreksi data dikirim ke maintainer pribadi</li>
+          </ul>
+          <h3 class="mt-4 text-sm font-semibold text-amber-900">Metodologi Singkat</h3>
+          <p class="mt-2 text-sm text-amber-900/90">Sumber data diolah dari workbook, ditransformasi ke JSON, lalu divalidasi otomatis sebelum build.</p>
+          <p class="mt-3 text-xs text-amber-900/80">Detail teknis lengkap tersedia pada README dan PRD di repositori proyek.</p>
+        </article>
+      </section>
 
       <section class="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4" data-animate>
         <article class="rounded-2xl border border-(--line) bg-(--surface) p-4">
@@ -93,11 +115,11 @@ const updatedDate = new Date(metadata.generatedAt).toLocaleDateString("id-ID", {
             <details id="export-menu" class="relative">
               <summary class="cursor-pointer list-none rounded-lg border border-(--line) bg-white px-3 py-2 text-sm font-semibold text-(--ink) marker:hidden">Ekspor</summary>
               <div class="absolute right-0 top-11 w-40 rounded-lg border border-(--line) bg-white p-1 shadow-lg">
-                <button id="export-csv" class="block w-full rounded-md px-3 py-2 text-left text-sm text-(--ink-muted) transition hover:bg-(--surface-soft)">CSV</button>
-                <button id="export-xlsx" class="block w-full rounded-md px-3 py-2 text-left text-sm text-(--ink-muted) transition hover:bg-(--surface-soft)">Excel (.xlsx)</button>
+                <button id="export-csv" type="button" class="block w-full rounded-md px-3 py-2 text-left text-sm text-(--ink-muted) transition hover:bg-(--surface-soft)">CSV</button>
+                <button id="export-xlsx" type="button" class="block w-full rounded-md px-3 py-2 text-left text-sm text-(--ink-muted) transition hover:bg-(--surface-soft)">Excel (.xlsx)</button>
               </div>
             </details>
-            <button id="reset-filter" class="rounded-lg border border-transparent px-2 py-2 text-sm text-(--ink-muted) underline underline-offset-2 transition hover:text-(--ink)">Reset</button>
+            <button id="reset-filter" type="button" class="rounded-lg border border-transparent px-2 py-2 text-sm text-(--ink-muted) underline underline-offset-2 transition hover:text-(--ink)">Reset</button>
           </div>
           <div class="mt-2 flex flex-wrap items-center gap-2">
             <p id="active-filters" class="text-xs text-(--ink-muted)"></p>
@@ -114,6 +136,9 @@ const updatedDate = new Date(metadata.generatedAt).toLocaleDateString("id-ID", {
           <h2 class="text-lg font-semibold text-(--ink)">Daftar Unit Kerja</h2>
           <span id="verification-summary" class="rounded-full border border-(--line) px-3 py-1 text-xs text-(--ink-muted)"></span>
         </div>
+        <p class="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          Data tabel untuk visualisasi publik (non-resmi). Untuk rujukan formal, gunakan kanal resmi instansi terkait.
+        </p>
 
         <div class="mb-3 grid gap-2 sm:grid-cols-[1fr_auto_auto]">
           <label class="relative block">
@@ -152,15 +177,65 @@ const updatedDate = new Date(metadata.generatedAt).toLocaleDateString("id-ID", {
           <nav id="pagination-controls" class="flex flex-wrap items-center gap-1.5" aria-label="Pagination daftar unit kerja"></nav>
         </div>
       </section>
+
+      <footer class="mt-6 rounded-2xl border border-(--line) bg-(--surface) p-4 text-xs text-(--ink-muted)" data-animate>
+        <p class="font-semibold text-(--ink)">Disclaimer Legal</p>
+        <p class="mt-1">Web app ini adalah project pribadi, bukan produk resmi pemerintah, dan tidak terafiliasi dengan Kementerian Kesehatan RI atau unit organisasinya.</p>
+        <p class="mt-1">Dikembangkan dengan bantuan AI (vibe coding) untuk visualisasi data publik. Akurasi data diupayakan, namun dapat berubah.</p>
+      </footer>
     </main>
 
+    <div id="disclaimer-modal" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/45 px-4" role="dialog" aria-modal="true" aria-labelledby="disclaimer-title">
+      <div class="w-full max-w-lg rounded-2xl border border-(--line) bg-white p-5 shadow-2xl">
+        <h2 id="disclaimer-title" class="text-lg font-semibold text-(--ink)">Sebelum lanjut</h2>
+        <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-(--ink-muted)">
+          <li>Ini bukan situs resmi pemerintah dan tidak berafiliasi dengan Kemenkes.</li>
+          <li>Data untuk visualisasi publik, bukan rujukan administratif formal.</li>
+          <li>Project dikembangkan dengan bantuan AI (vibe coding).</li>
+        </ul>
+        <button id="disclaimer-accept" type="button" class="mt-4 inline-flex rounded-lg border border-(--brand-2) bg-(--brand-2) px-4 py-2 text-sm font-semibold text-white transition hover:bg-(--brand-1)">Saya paham, lanjutkan</button>
+      </div>
+    </div>
+
     <script id="units-data" type="application/json" is:inline set:html={JSON.stringify(units)}></script>
+    <script
+      id="metadata-data"
+      type="application/json"
+      is:inline
+      set:html={JSON.stringify(metadata)}
+    ></script>
 
     <script>
       import { initDashboard } from "../scripts/dashboard.js";
-
       const units = JSON.parse(document.getElementById("units-data")?.textContent || "[]");
-      initDashboard({ units });
+      const metadata = JSON.parse(document.getElementById("metadata-data")?.textContent || "{}");
+      initDashboard({ units, metadata });
+
+      const modal = document.getElementById("disclaimer-modal");
+      const acceptButton = document.getElementById("disclaimer-accept");
+      const seenKey = "unitkerja-disclaimer-seen";
+
+      let hasSeenDisclaimer = false;
+      try {
+        hasSeenDisclaimer = window.localStorage.getItem(seenKey) === "1";
+      } catch {
+        hasSeenDisclaimer = false;
+      }
+
+      if (modal && acceptButton && !hasSeenDisclaimer) {
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+      }
+
+      acceptButton?.addEventListener("click", () => {
+        try {
+          window.localStorage.setItem(seenKey, "1");
+        } catch {
+          // Abaikan jika browser memblokir localStorage.
+        }
+        modal?.classList.add("hidden");
+        modal?.classList.remove("flex");
+      });
     </script>
   </body>
 </html>

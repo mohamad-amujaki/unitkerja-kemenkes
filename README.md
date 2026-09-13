@@ -8,6 +8,11 @@ Perilaku utama saat ini:
 - Kolom sumber tidak ditampilkan di tabel UI.
 - Kolom sumber tetap tersedia di file export CSV/Excel.
 - Pencarian menggunakan exact-word per kata kunci (contoh: `biro` tidak match `birobuli`).
+- Keyword yang cocok ditampilkan dengan highlight pada tabel.
+- State filter tersimpan di URL query (`provinsi`, `eselon`, `q`, `map`, `size`, `page`).
+- Map dan tabel menampilkan skeleton loading ringan saat render awal.
+- CSV/XLSX menyisipkan baris metadata (disclaimer non-resmi, tanggal update, filter aktif).
+- UI menampilkan disclaimer non-resmi di banner, card informasi, modal first-visit, dan footer.
 
 ## Stack
 
@@ -58,6 +63,7 @@ Pembagian tanggung jawab:
 - `dashboard-events.js` mengelola semua listener UI.
 - `dashboard-filters.js` mengelola filter provinsi/eselon/mapRegion + pencarian.
 - `dashboard-export.js` mengelola format kolom export.
+- `dashboard-export.js` juga menambahkan baris metadata pada file export.
 - `dashboard-presenters.js` mengelola tampilan statistik dan ringkasan filter.
 - `dashboard-map-selection.js` mengelola hasil klik region peta.
 - `map-view.js` fokus pada map saja (fetch/cache geojson, warna provinsi, interaksi klik).
@@ -70,6 +76,7 @@ Prinsip performa yang dipakai:
 - Search memakai debounce untuk menekan rerender berlebihan.
 - Pagination menggunakan event delegation untuk menghindari listener berulang.
 - Logika search exact-word dipisah ke util agar mudah ditest.
+- Query URL disinkronkan dengan state agar restore/share link tetap konsisten.
 
 ## Cara Menjalankan
 
@@ -81,10 +88,17 @@ bun run dev
 Opsional (sesuai panduan proyek), jalankan dev server sebagai background process:
 
 ```bash
-astro dev --background
-astro dev status
-astro dev logs
-astro dev stop
+bun run astro dev --background
+bun run astro dev status
+bun run astro dev logs
+bun run astro dev stop
+```
+
+Jika muncul error `Outdated Optimize Dep`, restart dengan force:
+
+```bash
+bun run astro dev stop
+bun run astro dev --background --force
 ```
 
 Build production:
@@ -148,6 +162,7 @@ Cakupan test saat ini:
 - `search-utils.test.js` untuk normalisasi dan exact-word matching.
 - `dashboard-filters.test.js` untuk kombinasi filter utama.
 - `dashboard-map-selection.test.js` untuk perilaku klik region peta.
+- `dashboard-export.test.js` untuk baris metadata dan format output export.
 
 ## Catatan
 

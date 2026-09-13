@@ -2,9 +2,11 @@
 
 ## 1. Ringkasan
 
-Peta Persebaran Unit Kerja Kemenkes adalah aplikasi web publik untuk membantu masyarakat melihat persebaran, jumlah, dan informasi dasar seluruh unit kerja resmi Kementerian Kesehatan Republik Indonesia.
+Peta Persebaran Unit Kerja Kemenkes adalah aplikasi web publik independen untuk membantu masyarakat melihat persebaran, jumlah, dan informasi dasar unit kerja Kementerian Kesehatan Republik Indonesia.
 
 Produk menggunakan filled map berdasarkan provinsi. Pengguna dapat menyaring data berdasarkan provinsi dan Unit Eselon I, mencari unit kerja, melihat alamat, dan mengekspor hasil penyaringan ke CSV atau Excel.
+
+Catatan: aplikasi ini bukan produk resmi pemerintah dan tidak berafiliasi dengan Kementerian Kesehatan RI.
 
 ## 2. Keputusan Produk
 
@@ -20,6 +22,7 @@ Produk menggunakan filled map berdasarkan provinsi. Pengguna dapat menyaring dat
 - Data alamat: boleh dipublikasikan
 - Koreksi data: disampaikan pengguna melalui WhatsApp kepada pengelola
 - Ekspor: mengikuti filter aktif
+- Posisi produk: project pribadi independen (AI-assisted development / vibe coding)
 
 ## 3. Masalah
 
@@ -101,9 +104,20 @@ Fitur tambahan:
 
 - Pencarian unit kerja (nama/alamat/eselon/provinsi/jenis unit)
 - Pencarian menggunakan exact-word per kata kunci (contoh: `biro` tidak cocok dengan `birobuli`)
+- Kata yang cocok ditampilkan dengan highlight pada tabel untuk memudahkan pemindaian
 - Tombol reset filter
 - Indikator jumlah hasil setelah filter diterapkan
 - Filter diterapkan secara konsisten pada peta, ringkasan, tabel, dan ekspor
+- State filter disimpan ke URL query agar bisa di-refresh/share tanpa kehilangan konteks
+
+Parameter query yang digunakan:
+
+- `provinsi`
+- `eselon`
+- `q` (search)
+- `map` (region alias hasil klik peta)
+- `size` (jumlah baris tabel: 10/20/50)
+- `page` (halaman tabel)
 
 ### 7.4 Daftar Unit Kerja
 
@@ -119,6 +133,7 @@ Catatan:
 
 - Kolom sumber tidak ditampilkan pada tabel UI.
 - Informasi sumber tetap tersedia pada hasil export CSV/Excel.
+- Tabel menampilkan skeleton loading ringan pada render awal.
 
 Tabel harus responsif pada perangkat mobile. Pada layar kecil, detail dapat ditampilkan dalam kartu atau expandable row.
 
@@ -134,6 +149,7 @@ Ekspor harus menghormati:
 - Filter provinsi
 - Filter Unit Eselon I
 - Kata pencarian
+- Konteks tampilan tabel (`size` dan `page`) pada saat export dilakukan
 
 Kolom export:
 
@@ -143,6 +159,11 @@ Kolom export:
 - Alamat
 - Sumber
 
+Baris metadata export:
+
+- Disisipkan di bagian atas file CSV/XLSX.
+- Berisi disclaimer non-resmi, tanggal update data, dan ringkasan filter aktif.
+
 Nama file disarankan menggunakan pola:
 
 ```text
@@ -150,7 +171,15 @@ unit-kerja-kemenkes-[tanggal]-filtered.csv
 unit-kerja-kemenkes-[tanggal]-filtered.xlsx
 ```
 
-### 7.6 Koreksi Data melalui WhatsApp
+### 7.6 Disclaimer dan Transparansi
+
+- Tampilkan sticky banner disclaimer non-resmi di bagian atas halaman.
+- Tampilkan card "Baca Sebelum Menggunakan Data" yang memuat konteks kualitas data dan batasan penggunaan.
+- Tampilkan modal disclaimer saat kunjungan pertama (disimpan via localStorage).
+- Tampilkan footer legal disclaimer permanen.
+- Pesan disclaimer harus jelas bahwa aplikasi tidak bisa dijadikan rujukan administratif resmi.
+
+### 7.7 Koreksi Data melalui WhatsApp
 
 Setiap unit kerja memiliki tombol **Laporkan Koreksi** yang membuka WhatsApp dengan pesan terisi otomatis.
 
@@ -273,6 +302,7 @@ Pipeline pembaruan data yang disarankan:
 - Memiliki aksesibilitas dasar: keyboard navigation, kontras memadai, label kontrol, dan alternatif tabel untuk informasi peta.
 - Mendukung `prefers-reduced-motion` dan tetap usable tanpa animasi.
 - Peta menyediakan catatan atribusi untuk sumber boundary dan tile provider.
+- Halaman menampilkan disclaimer non-resmi secara jelas pada area yang mudah terlihat.
 
 ## 12. Kriteria Penerimaan MVP
 
@@ -282,10 +312,13 @@ Pipeline pembaruan data yang disarankan:
 - Filter provinsi mengubah peta, ringkasan, tabel, dan hasil ekspor.
 - Filter Unit Eselon I mengubah peta, ringkasan, tabel, dan hasil ekspor.
 - Pencarian unit kerja (exact-word per kata kunci) bekerja bersama filter lain.
+- Keyword pencarian yang cocok tampil dengan highlight pada tabel.
 - Tooltip peta menampilkan jumlah unit per provinsi.
 - Tabel menampilkan No, Unit Eselon I - Unit Kerja, provinsi, alamat, dan aksi.
 - CSV yang diunduh hanya berisi data sesuai filter aktif.
 - Excel yang diunduh hanya berisi data sesuai filter aktif.
+- CSV/XLSX menyisipkan baris metadata disclaimer + ringkasan filter aktif.
+- URL query menyimpan state filter (`provinsi`, `eselon`, `q`, `map`, `size`, `page`) agar bisa di-share.
 - Tombol koreksi membuka WhatsApp dengan nomor tujuan dan pesan terisi.
 - Tanggal pembaruan dan catatan kualitas data terlihat oleh pengguna.
 - Aplikasi dapat digunakan pada viewport mobile.

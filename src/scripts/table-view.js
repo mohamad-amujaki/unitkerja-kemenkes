@@ -1,4 +1,5 @@
 import { gsap } from "gsap";
+import { getSearchTerms, getWholeWordRegex } from "./search-utils.js";
 
 /**
  * Create all behaviors related to the table:
@@ -12,25 +13,51 @@ export function createTableView({
 	formatter,
 	shouldReduceMotion,
 	createWaLink,
+	onPageChange,
 }) {
-	function renderUnitCell(item) {
+	function highlightText(value, terms) {
+		// Highlight dilakukan setelah filter berhasil match.
+		// Tujuannya hanya membantu user melihat kata yang cocok di tabel.
+		let output = String(value ?? "-");
+		if (terms.length === 0) return output;
+
+		for (const term of terms) {
+			const regex = getWholeWordRegex(term, "giu");
+			output = output.replace(
+				regex,
+				'<mark class="rounded bg-amber-100 px-0.5 text-amber-900">$&</mark>',
+			);
+		}
+
+		return output;
+	}
+
+	function renderUnitCell(item, searchTerms) {
+		const eselonText = highlightText(item.parentEselonI, searchTerms);
+		const unitNameText = highlightText(item.name, searchTerms);
+
 		return `
       <td class="px-3 py-3">
-        <p class="font-medium text-(--ink)">${item.parentEselonI}</p>
-        <p class="mt-0.5 text-(--ink-muted)">${item.name}</p>
+        <p class="font-medium text-(--ink)">${eselonText}</p>
+        <p class="mt-0.5 text-(--ink-muted)">${unitNameText}</p>
       </td>
     `;
 	}
 
 	function renderRow(item) {
+		// Ambil daftar keyword aktif untuk kebutuhan highlight di kolom tabel.
+		const searchTerms = getSearchTerms(state.search);
+		const provinceText = highlightText(item.provinceName, searchTerms);
+		const addressText = highlightText(item.address, searchTerms);
+
 		// Satu fungsi untuk merender satu baris tabel,
 		// supaya struktur kolom mudah dirawat saat ada perubahan.
 		return `
       <tr class="border-t border-(--line) align-top">
         <td class="px-3 py-3 text-(--ink-muted)">${item.no}</td>
-        ${renderUnitCell(item)}
-        <td class="px-3 py-3 text-(--ink-muted)">${item.provinceName}</td>
-        <td class="px-3 py-3 text-(--ink-muted)">${item.address}</td>
+        ${renderUnitCell(item, searchTerms)}
+        <td class="px-3 py-3 text-(--ink-muted)">${provinceText}</td>
+        <td class="px-3 py-3 text-(--ink-muted)">${addressText}</td>
         <td class="px-3 py-3">
           <a class="inline-flex rounded-lg border border-(--brand-2) px-2 py-1 text-xs font-semibold text-(--brand-1) transition hover:bg-(--surface-soft)" href="${createWaLink(item)}" target="_blank" rel="noreferrer noopener">Laporkan</a>
         </td>
@@ -128,6 +155,8 @@ export function createTableView({
 		clampCurrentPage();
 		renderTable();
 		renderPagination();
+		// Beri tahu dashboard bahwa halaman berubah (untuk sinkronisasi URL query).
+		onPageChange?.(state.page);
 	});
 
 	return {

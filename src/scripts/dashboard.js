@@ -55,7 +55,7 @@ function createWaLink(item) {
 	return `https://wa.me/6281315866766?text=${encodeURIComponent(message)}`;
 }
 
-export function initDashboard({ units }) {
+export function initDashboard({ units, metadata }) {
 	if (!Array.isArray(units) || units.length === 0) return;
 
 	const shouldReduceMotion = window.matchMedia(
@@ -105,6 +105,8 @@ export function initDashboard({ units }) {
 		pageSize: 20,
 	};
 
+	let hasRenderedOnce = false;
+
 	// Modul XLSX diload saat dibutuhkan saja (lazy load), jadi beban awal halaman lebih kecil.
 	let xlsxModulePromise = null;
 	async function getXlsx() {
@@ -122,6 +124,82 @@ export function initDashboard({ units }) {
 		el.eselonFilter.innerHTML = `<option value="all">Semua Eselon I</option>${eselons
 			.map((name) => `<option value="${name}">${name}</option>`)
 			.join("")}`;
+	}
+
+	function buildActiveFilterSummary() {
+		// Ringkasan ini dipakai untuk metadata di file export,
+		// supaya penerima file tahu filter apa yang aktif saat data diunduh.
+		const labels = [];
+		if (state.province !== "all") labels.push(`Provinsi: ${state.province}`);
+		if (state.eselon !== "all") labels.push(`Eselon I: ${state.eselon}`);
+		if (state.mapRegion !== "all")
+			labels.push(`Wilayah peta: ${state.mapRegion}`);
+		if (state.search) labels.push(`Cari: "${state.search}"`);
+		return labels.join(" | ");
+	}
+
+	function syncUrlQuery() {
+		// Simpan state filter ke query URL agar link bisa dibagikan
+		// dan saat refresh state tetap sama.
+		const params = new URLSearchParams();
+		if (state.province !== "all") params.set("provinsi", state.province);
+		if (state.eselon !== "all") params.set("eselon", state.eselon);
+		if (state.search) params.set("q", state.search);
+		if (state.mapRegion !== "all") params.set("map", state.mapRegion);
+		if (state.pageSize !== 20) params.set("size", String(state.pageSize));
+		if (state.page > 1) params.set("page", String(state.page));
+
+		const query = params.toString();
+		const nextUrl = `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`;
+		window.history.replaceState(null, "", nextUrl);
+	}
+
+	function hydrateStateFromUrl() {
+		// Ambil state awal dari query URL.
+		// Jika nilainya tidak valid, fallback ke default agar aplikasi tetap aman.
+		const params = new URLSearchParams(window.location.search);
+		const provinceParam = params.get("provinsi");
+		const eselonParam = params.get("eselon");
+		const searchParam = params.get("q");
+		const mapParam = params.get("map");
+		const sizeParam = Number(params.get("size"));
+		const pageParam = Number(params.get("page"));
+
+		const { provinces, eselons } = getFilterOptions(state.allUnits);
+
+		state.province =
+			provinceParam && provinces.includes(provinceParam)
+				? provinceParam
+				: "all";
+		state.eselon =
+			eselonParam && eselons.includes(eselonParam) ? eselonParam : "all";
+		state.search = searchParam ? searchParam.trim() : "";
+		state.mapRegion = mapParam ? mapParam.trim() : "all";
+		state.pageSize = [10, 20, 50].includes(sizeParam) ? sizeParam : 20;
+		state.page = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
+
+		el.provinceFilter.value = state.province;
+		el.eselonFilter.value = state.eselon;
+		el.pageSize.value = String(state.pageSize);
+		syncSearchInputs(state.search);
+	}
+
+	function showInitialLoadingState() {
+		// Tampilkan skeleton sementara data map/tabel belum selesai render pertama.
+		const mapEl = document.getElementById("map");
+		mapEl?.classList.add("map-skeleton");
+		el.tableBody.innerHTML = Array.from({ length: 5 })
+			.map(
+				() =>
+					'<tr class="border-t border-(--line)"><td colspan="5" class="px-3 py-3"><div class="skeleton-line"></div></td></tr>',
+			)
+			.join("");
+	}
+
+	function hideInitialLoadingState() {
+		// Skeleton disembunyikan setelah render pertama selesai.
+		const mapEl = document.getElementById("map");
+		mapEl?.classList.remove("map-skeleton");
 	}
 
 	function applyFilters() {
@@ -148,6 +226,8 @@ export function initDashboard({ units }) {
 		formatter,
 		shouldReduceMotion,
 		createWaLink,
+		// Saat user pindah halaman tabel, query URL ikut diperbarui.
+		onPageChange: () => syncUrlQuery(),
 	});
 
 	const mapView = createMapView({
@@ -174,8 +254,13 @@ export function initDashboard({ units }) {
 
 	async function exportFiltered(format) {
 		// Data export mengikuti data yang sedang terlihat (filteredUnits).
+		// Baris metadata juga ditambahkan agar file lepas konteks tetap bisa dipahami.
 		const XLSX = await getXlsx();
-		const rows = toExportRows(state.filteredUnits);
+		const rows = toExportRows({
+			units: state.filteredUnits,
+			metadata,
+			activeFilterSummary: buildActiveFilterSummary(),
+		});
 
 		const sheet = XLSX.utils.json_to_sheet(rows);
 		const now = new Date().toISOString().slice(0, 10);
@@ -207,6 +292,7 @@ export function initDashboard({ units }) {
 		tableView.clampCurrentPage();
 		tableView.renderTable();
 		tableView.renderPagination();
+		syncUrlQuery();
 	}
 
 	function applyStatePatch(patch, { resetPage = false } = {}) {
@@ -224,13 +310,21 @@ export function initDashboard({ units }) {
 
 	async function refreshAll() {
 		// Alur render utama: filter data -> render statistik/filter label -> render tabel -> render peta.
-		applyFilters();
-		tableView.clampCurrentPage();
-		renderStats({ el, formatter, filteredUnits: state.filteredUnits });
-		renderActiveFilters({ el, state });
-		tableView.renderTable();
-		tableView.renderPagination();
-		await mapView.render();
+		try {
+			applyFilters();
+			tableView.clampCurrentPage();
+			renderStats({ el, formatter, filteredUnits: state.filteredUnits });
+			renderActiveFilters({ el, state });
+			tableView.renderTable();
+			tableView.renderPagination();
+			await mapView.render();
+			syncUrlQuery();
+		} finally {
+			if (!hasRenderedOnce) {
+				hideInitialLoadingState();
+				hasRenderedOnce = true;
+			}
+		}
 	}
 
 	const debouncedRefreshAll = debounce(() => {
@@ -256,6 +350,8 @@ export function initDashboard({ units }) {
 	bindStickyToolbar({ el });
 
 	setFilterOptions();
+	hydrateStateFromUrl();
+	showInitialLoadingState();
 	refreshAll();
 
 	if (!shouldReduceMotion) {
